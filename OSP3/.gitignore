@@ -1,0 +1,16 @@
+/Constants.class
+/Event.class
+/EventQueue.class
+/Gui.class
+/Memory.class
+/PicturePanel.class
+/Process.class
+/Queue.class
+/Resource.class
+/SimulationGui.class
+/Simulator.class
+/Statistics.class
+
+bin
+.metadata
+
