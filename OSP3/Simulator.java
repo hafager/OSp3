@@ -9,7 +9,11 @@ public class Simulator implements Constants
     private EventQueue eventQueue;
 	/** Reference to the memory unit */
     private Memory memory;
-	/** Reference to the GUI interface */
+	/** Reference to the cpu unit */
+    private CPU cpu;
+	/** Reference to the i/o unit */
+    private IO io;
+    /** Reference to the GUI interface */
 	private Gui gui;
 	/** Reference to the statistics collector */
 	private Statistics statistics;
@@ -20,6 +24,7 @@ public class Simulator implements Constants
 	/** The average length between process arrivals */
 	private long avgArrivalInterval;
 	// Add member variables as needed
+	private long maxCpuTime;
 
 	/**
 	 * Constructs a scheduling simulator with the given parameters.
@@ -38,9 +43,12 @@ public class Simulator implements Constants
 		this.simulationLength = simulationLength;
 		this.avgArrivalInterval = avgArrivalInterval;
 		this.gui = gui;
+		this.maxCpuTime = maxCpuTime;
 		statistics = new Statistics();
 		eventQueue = new EventQueue();
 		memory = new Memory(memoryQueue, memorySize, statistics);
+		cpu = new CPU(cpuQueue, statistics, maxCpuTime);
+		io = new IO(ioQueue, statistics, avgIoTime);
 		clock = 0;
 		// Add code as needed
     }
@@ -56,6 +64,7 @@ public class Simulator implements Constants
 		System.out.print("Simulating...");
 		// Genererate the first process arrival event
 		eventQueue.insertEvent(new Event(NEW_PROCESS, 0));
+		evaluateProcess();
 		// Process events until the simulation length is exceeded:
 		while (clock < simulationLength && !eventQueue.isEmpty()) {
 			// Find the next event
@@ -64,8 +73,10 @@ public class Simulator implements Constants
 			long timeDifference = event.getTime()-clock;
 			// ...and update the clock.
 			clock = event.getTime();
-			// Let the memory unit and the GUI know that time has passed
+			// Let the memory unit and the GUI know that time has passed KANSKJE GJØRE DET SAMME FOR CPU OG IO OGSÅ HER
 			memory.timePassed(timeDifference);
+			
+			
 			gui.timePassed(timeDifference);
 			// Deal with the event
 			if (clock < simulationLength) {
@@ -132,7 +143,15 @@ public class Simulator implements Constants
 			
 			// TODO: Add this process to the CPU queue!
 			// Also add new events to the event queue if needed
-
+			
+			if (cpu.isIdle()) {
+				cpu.insertProcess(p);
+				evaluateProcess();
+			} else {
+				cpu.insertProcess(p);
+			}
+			
+			
 			// Since we haven't implemented the CPU and I/O device yet,
 			// we let the process leave the system immediately, for now.
 			memory.processCompleted(p);
@@ -151,6 +170,26 @@ public class Simulator implements Constants
 	 */
 	private void switchProcess() {
 		// Incomplete
+		
+		cpu.putAtTheBack();
+		evaluateProcess();
+
+		
+	}
+	
+	private void evaluateProcess() {
+		if(cpu.getRunningProcess().getTimeToNextIoOperation() < (maxCpuTime)  && cpu.getRunningProcess().getTimeToNextIoOperation() < cpu.getRunningProcess().getCpuTimeNeeded()){
+			eventQueue.insertEvent(new Event(IO_REQUEST, cpu.getRunningProcess().getTimeToNextIoOperation()));
+			
+			io.insertProcess(cpu.removeNext());
+			
+		
+		} else if (cpu.getRunningProcess().getCpuTimeNeeded() < maxCpuTime) {
+			eventQueue.insertEvent(new Event(END_PROCESS, clock+cpu.getRunningProcess().getCpuTimeNeeded()));
+		
+		} else {
+			eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+maxCpuTime));	
+		}
 	}
 
 	/**
@@ -158,6 +197,10 @@ public class Simulator implements Constants
 	 */
 	private void endProcess() {
 		// Incomplete
+		memory.processCompleted(cpu.removeNext());
+		flushMemoryQueue();
+		
+		evaluateProcess();
 	}
 
 	/**
@@ -166,6 +209,13 @@ public class Simulator implements Constants
 	 */
 	private void processIoRequest() {
 		// Incomplete
+		
+		if (io.moveInto()) {
+			eventQueue.insertEvent(new Event(END_IO, clock + 1 + (long)(2*Math.random()*io.avgIoTime)));
+		}
+		
+		evaluateProcess();
+		
 	}
 
 	/**
@@ -174,6 +224,14 @@ public class Simulator implements Constants
 	 */
 	private void endIoOperation() {
 		// Incomplete
+		
+		cpu.insertProcess(io.removeNext());
+		
+		if (!io.queueIsEmpty()) {
+			io.moveInto();
+			eventQueue.insertEvent(new Event(END_IO, clock + 1 + (long)(2*Math.random()*io.avgIoTime)));
+		}
+		
 	}
 
 	/**

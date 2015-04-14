@@ -22,6 +22,7 @@ public class Process implements Constants
     private long memoryNeeded;
 	/** The amount of cpu time still needed by this process */
     private long cpuTimeNeeded;
+	
 	/** The average time between the need for I/O operations for this process */
     private long avgIoInterval;
 	/** The time left until the next time this process needs I/O */
@@ -118,4 +119,29 @@ public class Process implements Constants
 	}
 
 	// Add more methods as needed
+	
+	public long getCpuTimeNeeded() {
+		return cpuTimeNeeded;
+	}
+
+	public void setCpuTimeNeeded(long cpuTimeNeeded) {
+		this.cpuTimeNeeded = cpuTimeNeeded;
+	}
+
+	public long getTimeSpentInCpu() {
+		return timeSpentInCpu;
+	}
+
+	public void setTimeSpentInCpu(long timeSpentInCpu) {
+		this.timeSpentInCpu = timeSpentInCpu;
+	}
+
+	public long getTimeToNextIoOperation() {
+		return timeToNextIoOperation;
+	}
+
+	public void setTimeToNextIoOperation(long timeToNextIoOperation) {
+		this.timeToNextIoOperation = timeToNextIoOperation;
+	}
+
 }

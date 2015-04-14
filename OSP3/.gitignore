@@ -14,3 +14,5 @@
 bin
 .metadata
 
+/CPU.class
+/IO.class
