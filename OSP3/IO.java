@@ -30,6 +30,12 @@ public class IO {
 		ioRunning = null;
 	}
 	
+	public Process removeRunning() {
+		Process ioFinished = ioRunning;
+		ioRunning = null;
+		return ioFinished;
+	}
+	
 	public Process removeNext() {
 		return (Process) ioQueue.removeNext();
 	}
