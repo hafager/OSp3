@@ -22,6 +22,7 @@ public class CPU {
 	
 	public void putAtTheBack() {
 		cpuQueue.insert(cpuQueue.removeNext());
+		
 	}
 	
 	public Process removeNext() {

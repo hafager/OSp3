@@ -15,7 +15,14 @@ public class Statistics
 	public long memoryQueueLengthTime = 0;
 	/** The largest memory queue length that has occured */
 	public long memoryQueueLargestLength = 0;
-    
+	// Number of processhifts from expired round
+	public long processTimeExpired = 0;
+	//Number of IO operations
+	public long ioOperationsProcessed = 0;
+    // Total time cpu has been running
+	public long totalCpuTime = 0;
+	
+	
 	/**
 	 * Prints out a report summarizing all collected data about the simulation.
 	 * @param simulationLength	The number of milliseconds that the simulation covered.
@@ -33,6 +40,7 @@ public class Statistics
 			System.out.println("Average # of times a process has been placed in memory queue: "+1);
 			System.out.println("Average time spent waiting for memory per process:            "+
 				totalTimeSpentWaitingForMemory/nofCompletedProcesses+" ms");
+			System.out.println("Average number of processes completed per second: "+ (float) nofCompletedProcesses/simulationLength);
 		}
 	}
 }

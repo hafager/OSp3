@@ -26,10 +26,6 @@ public class IO {
 		}
 	}
 	
-	public void finished() {
-		ioRunning = null;
-	}
-	
 	public Process removeRunning() {
 		Process ioFinished = ioRunning;
 		ioRunning = null;
@@ -42,6 +38,10 @@ public class IO {
 	
 	public boolean queueIsEmpty() {
 		return ioQueue.isEmpty();
+	}
+	
+	public Process getRunning() {
+		return ioRunning;
 	}
 	
 

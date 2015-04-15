@@ -133,15 +133,15 @@ public class Process implements Constants
 	}
 
 	public void setTimeSpentInCpu(long timeSpentInCpu) {
-		this.timeSpentInCpu = timeSpentInCpu;
+		this.timeSpentInCpu += timeSpentInCpu;
 	}
 
 	public long getTimeToNextIoOperation() {
 		return timeToNextIoOperation;
 	}
 
-	public void setTimeToNextIoOperation(long timeToNextIoOperation) {
-		this.timeToNextIoOperation = timeToNextIoOperation;
+	public void setTimeToNextIoOperation() {
+		this.timeToNextIoOperation = (long)(2*Math.random()*avgIoInterval);
 	}
 
 }
