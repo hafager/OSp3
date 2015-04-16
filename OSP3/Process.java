@@ -46,6 +46,8 @@ public class Process implements Constants
 
 	/** The global time of the last event involving this process */
 	private long timeOfLastEvent;
+	private long timesInCpuQueue;
+	private int timesInIoQueue;
 
 	/**
 	 * Creates a new process with given parameters. Other parameters are randomly
@@ -122,6 +124,18 @@ public class Process implements Constants
 	
 	public long getCpuTimeNeeded() {
 		return cpuTimeNeeded;
+	}
+	public void timesInCpuQueue(){
+		timesInCpuQueue ++;
+	}
+	public long getTimesInCpuQueue(){
+		return timesInCpuQueue;
+	}
+	public void timesInIoQueue(){
+		timesInIoQueue ++;
+	}
+	public long getTimesInIoQueue(){
+		return timesInIoQueue;
 	}
 
 	public void setCpuTimeNeeded(long cpuTimeNeeded) {

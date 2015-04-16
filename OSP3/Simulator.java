@@ -74,8 +74,10 @@ public class Simulator implements Constants
 			clock = event.getTime();
 			// Let the memory unit and the GUI know that time has passed KANSKJE GJØRE DET SAMME FOR CPU OG IO OGSÅ HER
 			memory.timePassed(timeDifference);
+			io.timePassed(timeDifference);
+			cpu.timePassed(timeDifference);
 			
-			System.out.println(timeDifference);
+			
 			System.out.println(event.getType());
 			
 			
@@ -148,9 +150,11 @@ public class Simulator implements Constants
 			
 			if (cpu.isIdle()) {
 				cpu.insertProcess(p);
+				p.timesInCpuQueue();
 				evaluateProcess();
 			} else {
 				cpu.insertProcess(p);
+				p.timesInCpuQueue();
 			}
 			
 			
@@ -176,11 +180,13 @@ public class Simulator implements Constants
 		evaluateProcess();
 
 		statistics.processTimeExpired++;
+		
 	}
 	
 	private void evaluateProcess() {
 		// Checks if the cpu is used or not. This is necessary because .getRUnningProcess() returns the next object, and cant point to null.
 		if(!cpu.isIdle()) {
+			gui.setCpuActive(cpu.getRunningProcess());
 			// Evaluates whether the next process needs IO while being processed
 			if(cpu.getRunningProcess().getTimeToNextIoOperation() < (maxCpuTime)  && cpu.getRunningProcess().getTimeToNextIoOperation() < cpu.getRunningProcess().getCpuTimeNeeded()){
 				eventQueue.insertEvent(new Event(IO_REQUEST, clock + cpu.getRunningProcess().getTimeToNextIoOperation()));
@@ -191,16 +197,25 @@ public class Simulator implements Constants
 				// Updates the allover statistics for total CPU time
 				statistics.totalCpuTime += needIO.getTimeToNextIoOperation();
 				io.insertProcess(needIO);
+				needIO.timesInIoQueue();
+				needIO.setCpuTimeNeeded(needIO.getCpuTimeNeeded()-needIO.getTimeToNextIoOperation());
+				gui.setCpuActive(null);
 				
+
 			
 			}
 			// Evaluates whether the next process will be finished while being processed the next time.
 			else if (cpu.getRunningProcess().getCpuTimeNeeded() < maxCpuTime) {
 				eventQueue.insertEvent(new Event(END_PROCESS, clock+cpu.getRunningProcess().getCpuTimeNeeded()));
+				statistics.totalCpuTime += cpu.getRunningProcess().getCpuTimeNeeded();
+				cpu.getRunningProcess().setCpuTimeNeeded(0);
+				
 				
 			
 			} else {
-				eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+maxCpuTime));	
+				eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+maxCpuTime));
+				cpu.getRunningProcess().setCpuTimeNeeded(cpu.getRunningProcess().getCpuTimeNeeded()-maxCpuTime);
+				statistics.totalCpuTime += maxCpuTime;
 			}
 		}
 	}
@@ -211,14 +226,23 @@ public class Simulator implements Constants
 	private void endProcess() {
 		// Incomplete
 		
-		statistics.totalCpuTime += cpu.getRunningProcess().getCpuTimeNeeded();
+		Process runningProcess = cpu.getRunningProcess();
+		
+		if (runningProcess != null){
+		
+			statistics.totalCpuTime += cpu.getRunningProcess().getCpuTimeNeeded();
+	
 		
 		memory.processCompleted(cpu.removeNext());
 		flushMemoryQueue();
+		if (!cpu.isIdle()) {
+			evaluateProcess();
+		}
+		gui.setCpuActive(null);
 		
-		evaluateProcess();
 		
 		statistics.nofCompletedProcesses++;
+		}
 	}
 
 	/**
@@ -232,6 +256,7 @@ public class Simulator implements Constants
 		
 		if (io.moveInto()) {
 			eventQueue.insertEvent(new Event(END_IO, clock + 1 + (long)(2*Math.random()*io.avgIoTime)));
+			gui.setIoActive(io.getRunning());
 		}
 		
 		evaluateProcess();
@@ -244,6 +269,7 @@ public class Simulator implements Constants
 	 * is done with its I/O operation.
 	 */
 	private void endIoOperation() {
+		gui.setIoActive(null);
 		// Incomplete
 		Process ioFinished = io.removeRunning();
 		ioFinished.setTimeToNextIoOperation(); // Legg til ny io-tid
@@ -256,11 +282,13 @@ public class Simulator implements Constants
 		}
 		
 		if (!io.queueIsEmpty()) {
-			io.moveInto();
-			eventQueue.insertEvent(new Event(END_IO, clock + 1 + (long)(2*Math.random()*io.avgIoTime)));
+			eventQueue.insertEvent(new Event(IO_REQUEST, clock));
+
 		}
 		
 		statistics.ioOperationsProcessed++;
+		
+		
 		
 	}
 
@@ -286,7 +314,7 @@ public class Simulator implements Constants
 	 * @param args	Parameters from the command line, they are ignored.
 	 */
 	public static void main(String args[]) {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		/*BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("Please input system parameters: ");
 
 		System.out.print("Memory size (KB): ");
@@ -312,6 +340,8 @@ public class Simulator implements Constants
 		System.out.print("Average time between process arrivals (ms): ");
 		long avgArrivalInterval = readLong(reader);
 
-		SimulationGui gui = new SimulationGui(memorySize, maxCpuTime, avgIoTime, simulationLength, avgArrivalInterval);
+		SimulationGui gui = new SimulationGui(memorySize, maxCpuTime, avgIoTime, simulationLength, avgArrivalInterval); */
+		
+		SimulationGui gui = new SimulationGui(2048,500,225,250000,5000);
 	}
 }

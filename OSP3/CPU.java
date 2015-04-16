@@ -17,11 +17,17 @@ public class CPU {
 	}
 	
 	public Process getRunningProcess() {
-		return (Process) cpuQueue.getNext();
+		if(!cpuQueue.isEmpty()){
+			return (Process) cpuQueue.getNext();
+		}
+		return null; 
+		
 	}
 	
 	public void putAtTheBack() {
+		if(!cpuQueue.isEmpty()){
 		cpuQueue.insert(cpuQueue.removeNext());
+		}
 		
 	}
 	
@@ -32,5 +38,12 @@ public class CPU {
 	public boolean isIdle() {
 		return cpuQueue.isEmpty();
 	}
+	
+	public void timePassed(long timePassed) {
+		statistics.cpuQueueLengthTime += cpuQueue.getQueueLength()*timePassed;
+		if (cpuQueue.getQueueLength() > statistics.cpuQueueLargestLength) {
+			statistics.ioQueueLargestLength = cpuQueue.getQueueLength(); 
+		}
+    }
 
 }
