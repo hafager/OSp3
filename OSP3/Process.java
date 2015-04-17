@@ -10,6 +10,10 @@ import java.util.*;
  */
 public class Process implements Constants
 {
+	public static long getNextProcessId() {
+		return nextProcessId;
+	}
+
 	/** The ID of the next process to be created */
 	private static long nextProcessId = 1;
 	/** The font used by all processes */

@@ -186,6 +186,10 @@ public class Simulator implements Constants
 	private void evaluateProcess() {
 		// Checks if the cpu is used or not. This is necessary because .getRUnningProcess() returns the next object, and cant point to null.
 		if(!cpu.isIdle()) {
+			Process p = cpu.getRunningProcess();
+			System.out.println("Process ID: " + p.getNextProcessId());
+			System.out.println("Tid til neste IO: " + p.getTimeToNextIoOperation());
+			System.out.println("Tid igjen i CPU: " + p.getCpuTimeNeeded());
 			gui.setCpuActive(cpu.getRunningProcess());
 			// Evaluates whether the next process needs IO while being processed
 			if(cpu.getRunningProcess().getTimeToNextIoOperation() < (maxCpuTime)  && cpu.getRunningProcess().getTimeToNextIoOperation() < cpu.getRunningProcess().getCpuTimeNeeded()){
@@ -215,6 +219,7 @@ public class Simulator implements Constants
 			} else {
 				eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+maxCpuTime));
 				cpu.getRunningProcess().setCpuTimeNeeded(cpu.getRunningProcess().getCpuTimeNeeded()-maxCpuTime);
+				cpu.getRunningProcess().setTimeToNextIoOperation(cpu.getRunningProcess().getTimeToNextIoOperation()-maxCpuTime);
 				cpu.getRunningProcess().timesInCpuQueue();
 				statistics.totalCpuTime += maxCpuTime;
 			}
