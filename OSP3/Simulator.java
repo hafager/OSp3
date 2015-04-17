@@ -1,5 +1,6 @@
 import java.io.*;
 
+
 /**
  * The main class of the P3 exercise. This class is only partially complete.
  */
@@ -79,6 +80,7 @@ public class Simulator implements Constants
 			
 			
 			System.out.println(event.getType());
+
 			
 			
 			gui.timePassed(timeDifference);
@@ -150,9 +152,11 @@ public class Simulator implements Constants
 			// Also add new events to the event queue if needed
 				
 			if (cpu.isIdle()) {
+				
+				
 				cpu.insertProcess(p);
 				p.timesInCpuQueue();
-				evaluateProcess();
+				switchProcess();
 			} else {
 				cpu.insertProcess(p);
 				p.timesInCpuQueue();
@@ -177,14 +181,48 @@ public class Simulator implements Constants
 	 */
 	private void switchProcess() {
 		// Incomplete
-		cpu.putAtTheBack();
 		
-		evaluateProcess();
+		Process p = cpu.getRunningProcess();
+		p.setCpuTimeNeeded(p.getCpuTimeNeeded()-maxCpuTime);
+		
+		if (p != null){
+			p.setTimeSpentInCpu(clock);
+			p.setCpuTimeNeeded(p.getCpuTimeNeeded()-maxCpuTime);
+			p.setTimeToNextIoOperation(p.getTimeToNextIoOperation()-maxCpuTime);
+			gui.setCpuActive(null);
+			cpu.putAtTheBack();
+			statistics.totalCpuTime += maxCpuTime;
+			statistics.processTimeExpired++;
+				
+			
+		}
+		p = cpu.getRunningProcess();
+		
+		if (p != null){
+			p.leftCpuQueue(clock);
+			gui.setCpuActive(p);
+			createEvent(p);	
+			
+		}
 
-		statistics.processTimeExpired++;
 		
 	}
 	
+	private void createEvent(Process p){
+		if (p == null)
+			return;
+
+		if (p.getTimeToNextIoOperation() > maxCpuTime && p.getCpuTimeNeeded() > maxCpuTime){
+			eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock + maxCpuTime));
+		}
+		else if (p.getTimeToNextIoOperation() > p.getCpuTimeNeeded()){
+			eventQueue.insertEvent(new Event(END_PROCESS, clock + p.getCpuTimeNeeded()));
+		}
+		else{
+			eventQueue.insertEvent(new Event(IO_REQUEST, clock + p.getTimeToNextIoOperation()));
+		}
+	}
+	/**
 	private void evaluateProcess() {
 		// Checks if the cpu is used or not. This is necessary because .getRUnningProcess() returns the next object, and cant point to null.
 		if(!cpu.isIdle()) {
@@ -210,23 +248,11 @@ public class Simulator implements Constants
 			
 			}
 			// Evaluates whether the next process will be finished while being processed the next time.
-			else if (cpu.getRunningProcess().getCpuTimeNeeded() < maxCpuTime) {
-				eventQueue.insertEvent(new Event(END_PROCESS, clock+cpu.getRunningProcess().getCpuTimeNeeded()));
-				statistics.totalCpuTime += cpu.getRunningProcess().getCpuTimeNeeded();
-				cpu.getRunningProcess().setCpuTimeNeeded(0);
-				
-				
+	
 			
-			} else {
-				eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+maxCpuTime));
-				cpu.getRunningProcess().setCpuTimeNeeded(cpu.getRunningProcess().getCpuTimeNeeded()-maxCpuTime);
-				cpu.getRunningProcess().setTimeToNextIoOperation(cpu.getRunningProcess().getTimeToNextIoOperation()-maxCpuTime);
-				cpu.getRunningProcess().timesInCpuQueue();
-				cpu.getRunningProcess().setTimeSpentInCpu(clock + maxCpuTime);
-				statistics.totalCpuTime += maxCpuTime;
-			}
 		}
 	}
+	*/
 
 	/**
 	 * Ends the active process, and deallocates any resources allocated to it.
@@ -239,16 +265,11 @@ public class Simulator implements Constants
 		if (runningProcess != null){
 			
 			runningProcess.setTimeSpentInCpu(clock);
+			statistics.totalCpuTime += cpu.getRunningProcess().getCpuTimeNeeded();
 		
 			runningProcess.updateStatistics(statistics);
-	
-		
-		memory.processCompleted(cpu.removeNext());
-		flushMemoryQueue();
-		if (!cpu.isIdle()) {
-			evaluateProcess();
-		}
-		gui.setCpuActive(null);
+			memory.processCompleted(cpu.removeNext());
+			gui.setCpuActive(null);
 		
 		}
 	}
@@ -260,15 +281,18 @@ public class Simulator implements Constants
 	private void processIoRequest() {
 		// Incomplete
 		
+		Process p = cpu.getRunningProcess();
+		p.setTimeSpentInCpu(clock);
+		io.insertProcess(p);
 		
-		
-		if (io.moveInto()) {
-			eventQueue.insertEvent(new Event(END_IO, clock + (long)(2*Math.random()*io.avgIoTime)));
-			io.getRunning().leftIoQueue(clock);
-			gui.setIoActive(io.getRunning());
+		if (io.moveInto()){
+			p.leftIoQueue(clock);
+			p.setTimeNewToNextIoOperation();
+			gui.setIoActive(p);
+			eventQueue.insertEvent(new Event(END_IO, clock + 1 + (long)(2*Math.random()*io.avgIoTime)));
 		}
 		
-		evaluateProcess();
+		switchProcess();
 		
 		
 	}
@@ -279,25 +303,22 @@ public class Simulator implements Constants
 	 */
 	private void endIoOperation() {
 		gui.setIoActive(null);
-		// Incomplete
-		Process ioFinished = io.removeRunning();
-		ioFinished.setTimeSpentInIo(clock);
-		ioFinished.setTotalTimeInSystem(clock);
-		ioFinished.setTimeNewToNextIoOperation(); // Legg til ny io-tid
 		
-		if (cpu.isIdle()) {
-			cpu.insertProcess(ioFinished);
-			ioFinished.timesInCpuQueue();
-			evaluateProcess();
-		} else {
-			cpu.insertProcess(ioFinished);
-			ioFinished.timesInCpuQueue();
+		Process p = io.getRunning();
+		p.setTimeSpentInIo(clock);
+		cpu.insertProcess(p);
+		
+		if (cpu.isIdle()){
+			switchProcess();
+		}
+		if (io.moveInto()){
+			p = io.getRunning();
+			p.leftIoQueue(clock);
+			p.setTimeNewToNextIoOperation();
+			eventQueue.insertEvent(new Event(END_IO, clock +1+ (long)(2*Math.random()*io.avgIoTime)));
 		}
 		
-		if (!io.queueIsEmpty()) {
-			eventQueue.insertEvent(new Event(IO_REQUEST, clock));
 
-		}
 		
 		statistics.ioOperationsProcessed++;
 		
