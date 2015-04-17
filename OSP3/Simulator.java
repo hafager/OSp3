@@ -128,6 +128,7 @@ public class Simulator implements Constants
 		// Create a new process
 		Process newProcess = new Process(memory.getMemorySize(), clock);
 		memory.insertProcess(newProcess);
+		newProcess.setStartTime(clock);
 		flushMemoryQueue();
 		// Add an event for the next process arrival
 		long nextArrivalTime = clock + 1 + (long)(2*Math.random()*avgArrivalInterval);
@@ -147,7 +148,7 @@ public class Simulator implements Constants
 			
 			// TODO: Add this process to the CPU queue!
 			// Also add new events to the event queue if needed
-			
+				
 			if (cpu.isIdle()) {
 				cpu.insertProcess(p);
 				p.timesInCpuQueue();
@@ -177,6 +178,7 @@ public class Simulator implements Constants
 	private void switchProcess() {
 		// Incomplete
 		cpu.putAtTheBack();
+		
 		evaluateProcess();
 
 		statistics.processTimeExpired++;
@@ -187,9 +189,7 @@ public class Simulator implements Constants
 		// Checks if the cpu is used or not. This is necessary because .getRUnningProcess() returns the next object, and cant point to null.
 		if(!cpu.isIdle()) {
 			Process p = cpu.getRunningProcess();
-			System.out.println("Process ID: " + p.getNextProcessId());
-			System.out.println("Tid til neste IO: " + p.getTimeToNextIoOperation());
-			System.out.println("Tid igjen i CPU: " + p.getCpuTimeNeeded());
+			p.leftCpuQueue(clock);
 			gui.setCpuActive(cpu.getRunningProcess());
 			// Evaluates whether the next process needs IO while being processed
 			if(cpu.getRunningProcess().getTimeToNextIoOperation() < (maxCpuTime)  && cpu.getRunningProcess().getTimeToNextIoOperation() < cpu.getRunningProcess().getCpuTimeNeeded()){
@@ -200,6 +200,7 @@ public class Simulator implements Constants
 				needIO.setTimeSpentInCpu(needIO.getTimeToNextIoOperation());
 				// Updates the allover statistics for total CPU time
 				statistics.totalCpuTime += needIO.getTimeToNextIoOperation();
+				needIO.setTimeSpentInCpu(clock + needIO.getTimeToNextIoOperation());
 				io.insertProcess(needIO);
 				needIO.timesInIoQueue();
 				needIO.setCpuTimeNeeded(needIO.getCpuTimeNeeded()-needIO.getTimeToNextIoOperation());
@@ -221,6 +222,7 @@ public class Simulator implements Constants
 				cpu.getRunningProcess().setCpuTimeNeeded(cpu.getRunningProcess().getCpuTimeNeeded()-maxCpuTime);
 				cpu.getRunningProcess().setTimeToNextIoOperation(cpu.getRunningProcess().getTimeToNextIoOperation()-maxCpuTime);
 				cpu.getRunningProcess().timesInCpuQueue();
+				cpu.getRunningProcess().setTimeSpentInCpu(clock + maxCpuTime);
 				statistics.totalCpuTime += maxCpuTime;
 			}
 		}
@@ -235,6 +237,8 @@ public class Simulator implements Constants
 		Process runningProcess = cpu.getRunningProcess();
 		
 		if (runningProcess != null){
+			
+			runningProcess.setTimeSpentInCpu(clock);
 		
 			runningProcess.updateStatistics(statistics);
 	
@@ -260,6 +264,7 @@ public class Simulator implements Constants
 		
 		if (io.moveInto()) {
 			eventQueue.insertEvent(new Event(END_IO, clock + (long)(2*Math.random()*io.avgIoTime)));
+			io.getRunning().leftIoQueue(clock);
 			gui.setIoActive(io.getRunning());
 		}
 		
@@ -276,6 +281,8 @@ public class Simulator implements Constants
 		gui.setIoActive(null);
 		// Incomplete
 		Process ioFinished = io.removeRunning();
+		ioFinished.setTimeSpentInIo(clock);
+		ioFinished.setTotalTimeInSystem(clock);
 		ioFinished.setTimeNewToNextIoOperation(); // Legg til ny io-tid
 		
 		if (cpu.isIdle()) {

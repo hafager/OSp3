@@ -52,6 +52,21 @@ public class Process implements Constants
 	private long timeOfLastEvent;
 	private long timesInCpuQueue;
 	private int timesInIoQueue;
+	private long totalTimeInSystem;
+	private long startTime;
+
+
+	public void setTotalTimeInSystem(long clock) {
+		this.totalTimeInSystem = clock - startTime;
+	}
+
+	public long getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
 
 	/**
 	 * Creates a new process with given parameters. Other parameters are randomly
@@ -68,6 +83,7 @@ public class Process implements Constants
 		avgIoInterval = (1 + (long)(Math.random()*25))*cpuTimeNeeded/100;
 		// The first and latest event involving this process is its creation
 		timeOfLastEvent = creationTime;
+		startTime = creationTime;
 		// Assign a process ID
 		processId = nextProcessId++;
 		// Assign a pseudo-random color used by the GUI
@@ -104,6 +120,16 @@ public class Process implements Constants
 		  timeSpentWaitingForMemory += clock - timeOfLastEvent;
 		  timeOfLastEvent = clock;
     }
+    
+    public void leftCpuQueue(long clock) {
+    	timeSpentInReadyQueue += clock - timeOfLastEvent;
+    	timeOfLastEvent = clock;
+    }
+    
+    public void leftIoQueue(long clock) {
+		  timeSpentWaitingForIo += clock - timeOfLastEvent;
+		  timeOfLastEvent = clock;
+    }
 
     /**
 	 * Returns the amount of memory needed by this process.
@@ -121,10 +147,16 @@ public class Process implements Constants
      */
 	public void updateStatistics(Statistics statistics) {
 		statistics.totalTimeSpentWaitingForMemory += timeSpentWaitingForMemory;
+		statistics.totalTimeInSytem += totalTimeInSystem;
 		statistics.updateTimesInCpu(getTimesInCpuQueue());
 		statistics.updateTimesInIO(getTimesInIoQueue());
-		statistics.totalCpuTime += getCpuTimeNeeded();
 		statistics.nofCompletedProcesses++;
+		statistics.totalTimeSpentWaitingForCpu += timeSpentInReadyQueue;
+		statistics.totalTimeSpentInCpu += timeSpentInCpu;
+		statistics.totalTimeSpentWaitingForIo += timeSpentWaitingForIo;
+		statistics.totalTimeSpentInIo += timeSpentInIo;
+		
+		
 	}
 
 	// Add more methods as needed
@@ -153,8 +185,18 @@ public class Process implements Constants
 		return timeSpentInCpu;
 	}
 
-	public void setTimeSpentInCpu(long timeSpentInCpu) {
-		this.timeSpentInCpu += timeSpentInCpu;
+	public void setTimeSpentInCpu(long clock) {
+		timeSpentInCpu += clock - timeOfLastEvent;
+    	timeOfLastEvent = clock;
+	}
+
+	public long getTimeSpentInIo() {
+		return timeSpentInIo;
+	}
+
+	public void setTimeSpentInIo(long clock) {
+		this.timeSpentInIo += clock - timeOfLastEvent;
+    	timeOfLastEvent = clock;
 	}
 
 	public long getTimeToNextIoOperation() {
