@@ -33,12 +33,12 @@ public class Statistics
 	 * Prints out a report summarizing all collected data about the simulation.
 	 * @param simulationLength	The number of milliseconds that the simulation covered.
 	 */
-	public void updateTimesInCpu(Process p){
-		this.timesInCpuQueue = (this.timesInCpuQueue+p.getTimesInCpuQueue())/2;
+	public void updateTimesInCpu(long times){
+		this.timesInCpuQueue = (this.timesInCpuQueue+times)/2;
 		
 	}
-	public void updateTimesInIO(Process p){
-		this.timesInIoQueue = (this.timesInIoQueue+p.getTimesInIoQueue())/2;
+	public void updateTimesInIO(long times){
+		this.timesInIoQueue = (this.timesInIoQueue+times)/2;
 		
 	}
 	

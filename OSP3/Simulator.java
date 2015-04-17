@@ -164,7 +164,7 @@ public class Simulator implements Constants
 			// Try to use the freed memory:
 			flushMemoryQueue();
 			// Update statistics
-			p.updateStatistics(statistics);
+
 
 			// Check for more free memory
 			p = memory.checkMemory(clock);
@@ -231,7 +231,7 @@ public class Simulator implements Constants
 		
 		if (runningProcess != null){
 		
-			statistics.totalCpuTime += cpu.getRunningProcess().getCpuTimeNeeded();
+			runningProcess.updateStatistics(statistics);
 	
 		
 		memory.processCompleted(cpu.removeNext());
@@ -241,9 +241,6 @@ public class Simulator implements Constants
 		}
 		gui.setCpuActive(null);
 		
-		statistics.updateTimesInCpu(runningProcess);
-		statistics.updateTimesInIO(runningProcess);
-		statistics.nofCompletedProcesses++;
 		}
 	}
 
@@ -257,7 +254,7 @@ public class Simulator implements Constants
 		
 		
 		if (io.moveInto()) {
-			eventQueue.insertEvent(new Event(END_IO, clock + 1 + (long)(2*Math.random()*io.avgIoTime)));
+			eventQueue.insertEvent(new Event(END_IO, clock + (long)(2*Math.random()*io.avgIoTime)));
 			gui.setIoActive(io.getRunning());
 		}
 		
@@ -346,6 +343,6 @@ public class Simulator implements Constants
 
 		SimulationGui gui = new SimulationGui(memorySize, maxCpuTime, avgIoTime, simulationLength, avgArrivalInterval); */
 		
-		SimulationGui gui = new SimulationGui(2048,500,225,250000,1500);
+		SimulationGui gui = new SimulationGui(2048,500,225,250000,5000);
 	}
 }
