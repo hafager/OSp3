@@ -4,6 +4,7 @@ public class CPU {
 	private Queue cpuQueue;
 	private Statistics statistics;
 	private long maxCpuTime;
+	private Process processInCpu = null;
 	
 	public CPU(Queue cpuQueue, Statistics statistics, long maxCpuTime) {
 		super();
@@ -20,7 +21,7 @@ public class CPU {
 		if(!cpuQueue.isEmpty()){
 			return (Process) cpuQueue.getNext();
 		}
-		return null; 
+		return processInCpu; 
 		
 	}
 	
@@ -32,10 +33,12 @@ public class CPU {
 	}
 	
 	public Process removeNext() {
+		
 		return (Process) cpuQueue.removeNext();
 	}
 	
 	public boolean isIdle() {
+		return processInCpu == null;
 		return cpuQueue.isEmpty();
 	}
 	
