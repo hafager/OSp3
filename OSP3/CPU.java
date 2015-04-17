@@ -4,6 +4,7 @@ public class CPU {
 	private Queue cpuQueue;
 	private Statistics statistics;
 	private long maxCpuTime;
+	private Process processInCpu = null;
 	
 	public CPU(Queue cpuQueue, Statistics statistics, long maxCpuTime) {
 		super();
@@ -13,30 +14,37 @@ public class CPU {
 	}
 	
 	public void insertProcess(Process p) {
-		cpuQueue.insert(p);
+		if (processInCpu == null) {
+			processInCpu = p;
+		} else {
+			cpuQueue.insert(p);
+		}
 	}
 	
 	public Process getRunningProcess() {
-		if(!cpuQueue.isEmpty()){
-			return (Process) cpuQueue.getNext();
-		}
-		return null; 
+		return processInCpu; 
 		
 	}
 	
 	public void putAtTheBack() {
-		if(!cpuQueue.isEmpty()){
-		cpuQueue.insert(cpuQueue.removeNext());
-		}
+		cpuQueue.insert(processInCpu);
+		processInCpu = (Process) cpuQueue.removeNext();
 		
 	}
 	
 	public Process removeNext() {
-		return (Process) cpuQueue.removeNext();
+		Process finished = processInCpu;
+		
+		if(cpuQueue.isEmpty()) {
+			processInCpu = null;
+		} else {
+			processInCpu = (Process) cpuQueue.removeNext();
+		}
+		return finished;
 	}
 	
 	public boolean isIdle() {
-		return cpuQueue.isEmpty();
+		return processInCpu == null;
 	}
 	
 	public void timePassed(long timePassed) {
