@@ -14,32 +14,37 @@ public class CPU {
 	}
 	
 	public void insertProcess(Process p) {
-		cpuQueue.insert(p);
+		if (processInCpu == null) {
+			processInCpu = p;
+		} else {
+			cpuQueue.insert(p);
+		}
 	}
 	
 	public Process getRunningProcess() {
-		if(!cpuQueue.isEmpty()){
-			return (Process) cpuQueue.getNext();
-		}
 		return processInCpu; 
 		
 	}
 	
 	public void putAtTheBack() {
-		if(!cpuQueue.isEmpty()){
-		cpuQueue.insert(cpuQueue.removeNext());
-		}
+		cpuQueue.insert(processInCpu);
+		processInCpu = (Process) cpuQueue.removeNext();
 		
 	}
 	
 	public Process removeNext() {
+		Process finished = processInCpu;
 		
-		return (Process) cpuQueue.removeNext();
+		if(cpuQueue.isEmpty()) {
+			processInCpu = null;
+		} else {
+			processInCpu = (Process) cpuQueue.removeNext();
+		}
+		return finished;
 	}
 	
 	public boolean isIdle() {
 		return processInCpu == null;
-		return cpuQueue.isEmpty();
 	}
 	
 	public void timePassed(long timePassed) {
