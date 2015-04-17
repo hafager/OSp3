@@ -215,6 +215,7 @@ public class Simulator implements Constants
 			} else {
 				eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+maxCpuTime));
 				cpu.getRunningProcess().setCpuTimeNeeded(cpu.getRunningProcess().getCpuTimeNeeded()-maxCpuTime);
+				cpu.getRunningProcess().timesInCpuQueue();
 				statistics.totalCpuTime += maxCpuTime;
 			}
 		}
@@ -240,7 +241,8 @@ public class Simulator implements Constants
 		}
 		gui.setCpuActive(null);
 		
-		
+		statistics.updateTimesInCpu(runningProcess);
+		statistics.updateTimesInIO(runningProcess);
 		statistics.nofCompletedProcesses++;
 		}
 	}
@@ -276,9 +278,11 @@ public class Simulator implements Constants
 		
 		if (cpu.isIdle()) {
 			cpu.insertProcess(ioFinished);
+			ioFinished.timesInCpuQueue();
 			evaluateProcess();
 		} else {
 			cpu.insertProcess(ioFinished);
+			ioFinished.timesInCpuQueue();
 		}
 		
 		if (!io.queueIsEmpty()) {
@@ -342,6 +346,6 @@ public class Simulator implements Constants
 
 		SimulationGui gui = new SimulationGui(memorySize, maxCpuTime, avgIoTime, simulationLength, avgArrivalInterval); */
 		
-		SimulationGui gui = new SimulationGui(2048,500,225,250000,5000);
+		SimulationGui gui = new SimulationGui(2048,500,225,250000,1500);
 	}
 }

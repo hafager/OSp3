@@ -35,6 +35,9 @@ public class Statistics
 	 */
 	public void updateTimesInCpu(Process p){
 		this.timesInCpuQueue = (this.timesInCpuQueue+p.getTimesInCpuQueue())/2;
+		
+	}
+	public void updateTimesInIO(Process p){
 		this.timesInIoQueue = (this.timesInIoQueue+p.getTimesInIoQueue())/2;
 		
 	}
@@ -57,6 +60,8 @@ public class Statistics
 		System.out.println("Average IO queue length:                                  "+(float)ioQueueLengthTime/simulationLength);
 		System.out.println("Largest occuring cpu queue length:                         "+cpuQueueLargestLength);
 		System.out.println("Average cpu queue length:                                  "+(float)cpuQueueLengthTime/simulationLength);
+		System.out.println("Average number of times in cpu:                                  " + timesInCpuQueue);
+		System.out.println("Average number of times in IO:                                  " + timesInIoQueue);
 		if(nofCompletedProcesses > 0) {
 			System.out.println("Average # of times a process has been placed in memory queue: "+1);
 			System.out.println("Average time spent waiting for memory per process:            "+
