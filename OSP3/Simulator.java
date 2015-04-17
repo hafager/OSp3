@@ -276,7 +276,7 @@ public class Simulator implements Constants
 		gui.setIoActive(null);
 		// Incomplete
 		Process ioFinished = io.removeRunning();
-		ioFinished.setTimeToNextIoOperation(); // Legg til ny io-tid
+		ioFinished.setTimeNewToNextIoOperation(); // Legg til ny io-tid
 		
 		if (cpu.isIdle()) {
 			cpu.insertProcess(ioFinished);

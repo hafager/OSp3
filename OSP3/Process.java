@@ -161,8 +161,14 @@ public class Process implements Constants
 		return timeToNextIoOperation;
 	}
 
-	public void setTimeToNextIoOperation() {
+	public void setTimeToNextIoOperation(long time) {
+		this.timeToNextIoOperation = time;
+	}
+
+	public void setTimeNewToNextIoOperation() {
+		// TODO Auto-generated method stub
 		this.timeToNextIoOperation = (long)(2*Math.random()*avgIoInterval);
+		
 	}
 
 }
